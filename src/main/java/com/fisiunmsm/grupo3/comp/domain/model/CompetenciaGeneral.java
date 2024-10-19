@@ -20,30 +20,4 @@ public class CompetenciaGeneral {
     private String descripcion;
     private String tipo;
     private String nivel;
-
-    //private PlanEstudios planEstudios;
-    public Long getId() {
-        return id;
-    }
-
-    public String getCodigo() {
-        return codigo;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public String getNivel() {
-        return nivel;
-    }
-    
 }
