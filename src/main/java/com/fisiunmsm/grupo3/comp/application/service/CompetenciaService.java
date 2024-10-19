@@ -1,15 +1,13 @@
 package com.fisiunmsm.grupo3.comp.application.service;
 
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaEspecifica;
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaGeneralResponse;
-import com.fisiunmsm.grupo3.comp.infraestructure.mapper.CompetenciaEspecificaTable;
-import com.fisiunmsm.grupo3.comp.infraestructure.repository.CompetenciaEspecificaRepository;
-import com.fisiunmsm.grupo3.comp.infraestructure.repository.CompetenciaGeneralRepository;
+import com.fisiunmsm.grupo3.comp.domain.model.Competencia;
+import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaRegister;
+import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
+import com.fisiunmsm.grupo3.comp.infraestructure.mapper.CompetenciaTable;
+import com.fisiunmsm.grupo3.comp.infraestructure.repository.CompetenciaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaGeneral;
-import com.fisiunmsm.grupo3.comp.infraestructure.mapper.CompetenciaGeneralTable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -17,33 +15,68 @@ import reactor.core.publisher.Mono;
 public class CompetenciaService {
 
     @Autowired
-    private CompetenciaGeneralRepository competenciaGRepository;
-    @Autowired
-    private CompetenciaEspecificaRepository competenciaERepository;
+    private CompetenciaRepository competenciaRepository;
 
-    public Mono<CompetenciaGeneral> crearCompetenciaGeneral(CompetenciaGeneral competenciaG) {
-        CompetenciaGeneralTable competenciaEntity = CompetenciaGeneralTable.fromDomainModel(competenciaG);
-        return competenciaGRepository.save(competenciaEntity).map(CompetenciaGeneralTable::toDomainModel);
+    public Mono<Competencia> crearCompetenciaGeneral(CompetenciaRegister competenciaRegister) {
+        Competencia competencia = new Competencia(
+                null,
+                competenciaRegister.codigo(),
+                competenciaRegister.nombre(),
+                competenciaRegister.descripcion(),
+                competenciaRegister.planid(),
+                competenciaRegister.institucionid(),
+                competenciaRegister.departamentoid(),
+                "G"
+        );
+        CompetenciaTable competenciaEntity = CompetenciaTable.fromDomainModel(competencia);
+        return competenciaRepository.save(competenciaEntity)
+                .map(CompetenciaTable::toDomainModel);
     }
 
-    public Mono<CompetenciaEspecifica> crearCompetenciaEspecifica(CompetenciaEspecifica competenciaE) {
-        CompetenciaEspecificaTable competenciaEntity = CompetenciaEspecificaTable.fromDomainModel(competenciaE);
-        return competenciaERepository.save(competenciaEntity).map(CompetenciaEspecificaTable::toDomainModel);
+    public Mono<Competencia> crearCompetenciaEspecifica(CompetenciaRegister competenciaRegister) {
+        Competencia competencia = new Competencia(
+                null,
+                competenciaRegister.codigo(),
+                competenciaRegister.nombre(),
+                competenciaRegister.descripcion(),
+                competenciaRegister.planid(),
+                competenciaRegister.institucionid(),
+                competenciaRegister.departamentoid(),
+                "E"
+        );
+        CompetenciaTable competenciaEntity = CompetenciaTable.fromDomainModel(competencia);
+        return competenciaRepository.save(competenciaEntity).map(CompetenciaTable::toDomainModel);
     }
 
-    public Flux<CompetenciaEspecifica> obtenerCompetenciasEspecificasPorGeneralId(Long competenciaGeneralId) {
-        return competenciaERepository.findByCompetenciaGeneralId(competenciaGeneralId)
-                .map(CompetenciaEspecificaTable::toDomainModel);
+    public Flux<CompetenciaResponse> obtenerCompetenciasGenerales() {
+        return competenciaRepository.findAll()
+                .filter(competencia -> "G".equals(competencia.getTipo())) // Filter for general competencies
+                .map(CompetenciaTable::toDomainModel)
+                .map(competencia -> new CompetenciaResponse(
+                        competencia.getId(),
+                        competencia.getCodigo(),
+                        competencia.getNombre(),
+                        competencia.getDescripcion(),
+                        competencia.getPlanid().toString(),
+                        competencia.getInstitucionid().toString(),
+                        competencia.getDepartamentoid().toString(),
+                        competencia.getTipo()
+                ));
     }
 
-    public Flux<CompetenciaGeneralResponse> obtenerCompetenciasGenerales() {
-        return competenciaGRepository.findAll()
-                .map(CompetenciaGeneralTable::toDomainModel)
-                .map(competencia -> new CompetenciaGeneralResponse(competencia.getId(), competencia.getCodigo(), competencia.getNombre(), competencia.getDescripcion(), competencia.getTipo(), competencia.getNivel()));
-    }
-
-    public Flux<CompetenciaEspecifica> obtenerCompetenciasEspecificas() {
-        return competenciaERepository.findAll()
-                .map(CompetenciaEspecificaTable::toDomainModel);
+    public Flux<CompetenciaResponse> obtenerCompetenciasEspecificas() {
+        return competenciaRepository.findAll()
+                .filter(competencia -> "E".equals(competencia.getTipo())) // Filter for general competencies
+                .map(CompetenciaTable::toDomainModel)
+                .map(competencia -> new CompetenciaResponse(
+                        competencia.getId(),
+                        competencia.getCodigo(),
+                        competencia.getNombre(),
+                        competencia.getDescripcion(),
+                        competencia.getPlanid().toString(),
+                        competencia.getInstitucionid().toString(),
+                        competencia.getDepartamentoid().toString(),
+                        competencia.getTipo()
+                ));
     }
 }

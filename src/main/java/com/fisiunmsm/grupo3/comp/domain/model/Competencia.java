@@ -7,14 +7,13 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CompetenciaEspecifica {
-
-    private Long id;
+public class Competencia {
+    private Integer id;
     private String codigo;
     private String nombre;
     private String descripcion;
+    private Integer planid;
+    private Integer institucionid;
+    private Integer departamentoid;
     private String tipo;
-    private String nivel;
-
-    private Long competenciaGeneralId;
 }
