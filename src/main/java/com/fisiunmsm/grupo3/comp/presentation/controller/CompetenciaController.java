@@ -1,9 +1,11 @@
 package com.fisiunmsm.grupo3.comp.presentation.controller;
 
 import com.fisiunmsm.grupo3.comp.application.service.CompetenciaService;
+import com.fisiunmsm.grupo3.comp.application.service.InstitucionService;
 import com.fisiunmsm.grupo3.comp.domain.model.Competencia;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaRegister;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
+import com.fisiunmsm.grupo3.comp.domain.model.Institucion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
