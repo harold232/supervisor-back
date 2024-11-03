@@ -3,7 +3,6 @@ package com.fisiunmsm.grupo3.comp.application.service;
 import com.fisiunmsm.grupo3.comp.domain.model.Competencia;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaRegister;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
-import com.fisiunmsm.grupo3.comp.domain.model.Institucion;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.CompetenciaTable;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.DepartamentoTable;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.InstitucionTable;
