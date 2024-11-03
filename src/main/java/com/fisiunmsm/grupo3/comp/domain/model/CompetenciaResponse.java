@@ -8,9 +8,12 @@ public record CompetenciaResponse(
         String codigo,
         String nombre,
         String descripcion,
-        String planId,
-        String institucionId,
-        String deparamentoId,
+        Integer planId,
+        String planNombre,
+        Integer institucionId,
+        String institucionNombre,
+        Integer departamentoId,
+        String departamentoNombre,
         String tipo
 ) {
 }

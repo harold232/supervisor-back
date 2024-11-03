@@ -1,14 +1,11 @@
 package com.fisiunmsm.grupo3.comp.presentation.controller;
 
 import com.fisiunmsm.grupo3.comp.application.service.CompetenciaService;
-import com.fisiunmsm.grupo3.comp.application.service.InstitucionService;
 import com.fisiunmsm.grupo3.comp.domain.model.Competencia;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaRegister;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
-import com.fisiunmsm.grupo3.comp.domain.model.Institucion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -39,5 +36,16 @@ public class CompetenciaController {
     @GetMapping("/competencias-especificas")
     public Flux<CompetenciaResponse> obtenerCompetenciasEspecificas() {
         return competenciaService.obtenerCompetenciasEspecificas();
+    }
+
+    @PutMapping("/{id}")
+    public Mono<Competencia> actualizarCompetencia(@PathVariable Integer id,
+            @RequestBody CompetenciaRegister competenciaRegister) {
+        return competenciaService.actualizarCompetencia(id, competenciaRegister);
+    }
+
+    @DeleteMapping("/{id}")
+    public Mono<Void> eliminarCompetencia(@PathVariable Integer id) {
+        return competenciaService.eliminarCompetencia(id);
     }
 }
