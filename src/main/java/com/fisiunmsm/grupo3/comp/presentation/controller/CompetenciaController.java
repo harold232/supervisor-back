@@ -4,6 +4,7 @@ import com.fisiunmsm.grupo3.comp.application.service.CompetenciaService;
 import com.fisiunmsm.grupo3.comp.domain.model.Competencia;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaRegister;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
+import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResumen;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,14 +39,33 @@ public class CompetenciaController {
         return competenciaService.obtenerCompetenciasEspecificas();
     }
 
+    @GetMapping("/{id}")
+    public Mono<CompetenciaResponse> obtenerCompetenciaPorId(@PathVariable Integer id) {
+        return competenciaService.obtenerCompetenciaPorId(id);
+    }
+
     @PutMapping("/{id}")
-    public Mono<Competencia> actualizarCompetencia(@PathVariable Integer id,
-            @RequestBody CompetenciaRegister competenciaRegister) {
+    public Mono<Competencia> actualizarCompetencia(@PathVariable Integer id, @RequestBody CompetenciaRegister competenciaRegister) {
         return competenciaService.actualizarCompetencia(id, competenciaRegister);
     }
 
     @DeleteMapping("/{id}")
     public Mono<Void> eliminarCompetencia(@PathVariable Integer id) {
         return competenciaService.eliminarCompetencia(id);
+    }
+
+    @GetMapping("/all")
+    public Flux<CompetenciaResumen> obtenerCompetenciasResumidas() {
+        return competenciaService.obtenerCompetencias();
+    }
+
+    @GetMapping("/count-generales")
+    public Mono<Long> contarCompetenciasGenerales() {
+        return competenciaService.contarCompetenciasGenerales();
+    }
+
+    @GetMapping("/count-especificas")
+    public Mono<Long> contarCompetenciasEspecificas() {
+        return competenciaService.contarCompetenciasEspecificas();
     }
 }

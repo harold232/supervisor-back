@@ -3,6 +3,7 @@ package com.fisiunmsm.grupo3.comp.application.service;
 import com.fisiunmsm.grupo3.comp.domain.model.Competencia;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaRegister;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
+import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResumen;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.CompetenciaTable;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.DepartamentoTable;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.InstitucionTable;
@@ -122,6 +123,33 @@ public class CompetenciaService {
                 .flatMap(competencia -> competenciaRepository.delete(competencia));
                 //.then()
                 //.onErrorResume(e -> Mono.empty());
+    }
+
+    public Mono<CompetenciaResponse> obtenerCompetenciaPorId(Integer id) {
+        return competenciaRepository.findById(id)
+                .flatMap(this::mapToCompetenciaResponse)
+                .switchIfEmpty(Mono.error(new RuntimeException("Competencia no encontrada")));
+    }
+
+    public Flux<CompetenciaResumen> obtenerCompetencias() {
+        return competenciaRepository.findAll()
+                .map(competencia -> new CompetenciaResumen(
+                        competencia.getCodigo(),
+                        competencia.getNombre(),
+                        "G".equals(competencia.getTipo()) ? "General" : "Específica"
+                ));
+    }
+
+    public Mono<Long> contarCompetenciasGenerales() {
+        return competenciaRepository.findAll()
+                .filter(competencia -> "G".equals(competencia.getTipo()))
+                .count();
+    }
+
+    public Mono<Long> contarCompetenciasEspecificas() {
+        return competenciaRepository.findAll()
+                .filter(competencia -> "E".equals(competencia.getTipo()))
+                .count();
     }
 /*
     private Mono<CompetenciaResponse> mapToCompetenciaResponse(CompetenciaTable competencia) {

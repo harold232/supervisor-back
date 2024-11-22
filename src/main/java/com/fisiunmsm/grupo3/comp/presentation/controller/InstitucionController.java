@@ -1,30 +1,23 @@
 package com.fisiunmsm.grupo3.comp.presentation.controller;
 
 import com.fisiunmsm.grupo3.comp.application.service.InstitucionService;
+import com.fisiunmsm.grupo3.comp.domain.model.Institucion;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import com.fisiunmsm.grupo3.comp.domain.model.InstitucionEducativa;
-
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("api/institucion")
 @CrossOrigin
 public class InstitucionController {
-
     @Autowired
-    private InstitucionService institucionService;
+    public InstitucionService institucionService;
 
-    @PostMapping("/institucion-educativa")
-    public Mono<InstitucionEducativa> nuevaInstitucionE(@RequestBody InstitucionEducativa institucion) {
-        return institucionService.crearInstitucionEducativa(institucion);
+    @GetMapping("/all")
+    public Flux<Institucion> obtenerInstituciones() {
+        return institucionService.obtenerInstituciones();
     }
-
-    @GetMapping("/instituciones-educativas")
-    public Flux<InstitucionEducativa> obtenerInstitucionesEducativas() {
-        return institucionService.obtenerInstitucionesEducativas();
-    }
-
 }
