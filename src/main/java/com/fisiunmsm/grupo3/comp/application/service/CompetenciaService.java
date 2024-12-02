@@ -1,9 +1,6 @@
 package com.fisiunmsm.grupo3.comp.application.service;
 
-import com.fisiunmsm.grupo3.comp.domain.model.Competencia;
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaRegister;
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResumen;
+import com.fisiunmsm.grupo3.comp.domain.model.*;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.CompetenciaTable;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.DepartamentoTable;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.InstitucionTable;
@@ -12,11 +9,27 @@ import com.fisiunmsm.grupo3.comp.infraestructure.repository.CompetenciaRepositor
 import com.fisiunmsm.grupo3.comp.infraestructure.repository.DepartamentoRepository;
 import com.fisiunmsm.grupo3.comp.infraestructure.repository.InstitucionRepository;
 import com.fisiunmsm.grupo3.comp.infraestructure.repository.PlanEstudiosRepository;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+import org.apache.commons.csv.CSVParser;
 
 @Service
 public class CompetenciaService {
@@ -150,6 +163,82 @@ public class CompetenciaService {
         return competenciaRepository.findAll()
                 .filter(competencia -> "E".equals(competencia.getTipo()))
                 .count();
+    }
+
+    public Flux<Competencia> buscarCompetencias(String tipo, Integer departamento, Integer institucion) {
+        return competenciaRepository.buscarCompetencias(tipo, departamento, institucion)
+                .map(CompetenciaTable::toDomainModel);
+    }
+
+    public Mono<Void> importarCompetenciasCsv(MultipartFile file) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+             CSVParser csvParser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader)) {
+
+            return Flux.fromIterable(csvParser.getRecords())
+                    .map(this::csvRecordToCompetencia)
+                    .flatMap(competenciaRepository::save)
+                    .then();
+        } catch (IOException e) {
+            return Mono.error(new RuntimeException("Error processing CSV file", e));
+        }
+    }
+
+    private CompetenciaTable csvRecordToCompetencia(CSVRecord record) {
+        CompetenciaTable competencia = new CompetenciaTable(
+                null,
+                record.get("codigo"),
+                record.get("nombre"),
+                record.get("descripcion"),
+                Integer.parseInt(record.get("planid")),
+                Integer.parseInt(record.get("institucionid")),
+                Integer.parseInt(record.get("departamentoid")),
+                record.get("tipo")
+        );
+        System.out.println("Procesando competencia: " + competencia);
+        return competencia;
+    }
+
+    public Mono<Void> importarCompetenciasExcel(MultipartFile file) {
+        return Mono.fromCallable(() -> {
+            try (InputStream inputStream = file.getInputStream();
+                 Workbook workbook = new XSSFWorkbook(inputStream)) {
+
+                Sheet sheet = workbook.getSheetAt(0);
+                Flux<CompetenciaTable> competenciaFlux = Flux.fromIterable(sheet)
+                        .skip(1) // Skip header row
+                        .map(this::excelRowToCompetencia)
+                        .flatMap(competenciaRepository::save);
+
+                return competenciaFlux.then();
+            } catch (IOException e) {
+                return Mono.error(new RuntimeException("Error processing Excel file", e));
+            }
+        }).then();
+    }
+
+    private CompetenciaTable excelRowToCompetencia(Row row) {
+        return new CompetenciaTable(
+                null,
+                row.getCell(0).getStringCellValue(),
+                row.getCell(1).getStringCellValue(),
+                row.getCell(2).getStringCellValue(),
+                (int) row.getCell(3).getNumericCellValue(),
+                (int) row.getCell(4).getNumericCellValue(),
+                (int) row.getCell(5).getNumericCellValue(),
+                row.getCell(6).getStringCellValue()
+        );
+    }
+
+    public Flux<EstadisticasDTO> obtenerEstadisticas() {
+        return competenciaRepository.obtenerEstadisticas();
+    }
+
+    public Flux<CompetenciasPorCursoDTO> obtenerCompetenciasPorCursoYTipo() {
+        return competenciaRepository.obtenerCompetenciasPorCursoYTipo();
+    }
+
+    public Flux<PromedioCreditosHorasDTO> obtenerPromedioCreditosYHoras() {
+        return competenciaRepository.obtenerPromedioCreditosYHoras();
     }
 /*
     private Mono<CompetenciaResponse> mapToCompetenciaResponse(CompetenciaTable competencia) {

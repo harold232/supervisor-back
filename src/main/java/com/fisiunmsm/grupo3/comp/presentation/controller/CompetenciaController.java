@@ -1,13 +1,15 @@
 package com.fisiunmsm.grupo3.comp.presentation.controller;
 
 import com.fisiunmsm.grupo3.comp.application.service.CompetenciaService;
-import com.fisiunmsm.grupo3.comp.domain.model.Competencia;
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaRegister;
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResumen;
+import com.fisiunmsm.grupo3.comp.application.service.ReporteService;
+import com.fisiunmsm.grupo3.comp.domain.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -18,6 +20,8 @@ public class CompetenciaController {
 
     @Autowired
     private CompetenciaService competenciaService;
+    @Autowired
+    private ReporteService reporteService;
 
     @PostMapping("/general")
     public Mono<Competencia> nuevaCompetenciaG(@RequestBody CompetenciaRegister competenciaRegister) {
@@ -67,5 +71,38 @@ public class CompetenciaController {
     @GetMapping("/count-especificas")
     public Mono<Long> contarCompetenciasEspecificas() {
         return competenciaService.contarCompetenciasEspecificas();
+    }
+
+    @GetMapping("/buscar")
+    public Flux<Competencia> buscarCompetencias(
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) Integer departamento,
+            @RequestParam(required = false) Integer institucion) {
+        return competenciaService.buscarCompetencias(tipo, departamento, institucion);
+    }
+
+    @PostMapping("/importar-csv")
+    public Mono<Void> importarCompetenciasCsv(@RequestParam("file") MultipartFile file) {
+        return competenciaService.importarCompetenciasCsv(file);
+    }
+
+    @PostMapping("/importar-excel")
+    public Mono<Void> importarCompetenciasExcel(@RequestParam("file") MultipartFile file) {
+        return competenciaService.importarCompetenciasExcel(file);
+    }
+
+    @GetMapping("/estadisticas")
+    public Flux<EstadisticasDTO> obtenerEstadisticas() {
+        return competenciaService.obtenerEstadisticas();
+    }
+
+    @GetMapping("/estadisticas/competencias-por-curso")
+    public Flux<CompetenciasPorCursoDTO> obtenerCompetenciasPorCursoYTipo() {
+        return competenciaService.obtenerCompetenciasPorCursoYTipo();
+    }
+
+    @GetMapping("/estadisticas/promedio-creditos-horas")
+    public Flux<PromedioCreditosHorasDTO> obtenerPromedioCreditosYHoras() {
+        return competenciaService.obtenerPromedioCreditosYHoras();
     }
 }
