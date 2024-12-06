@@ -1,13 +1,8 @@
 package com.fisiunmsm.grupo3.comp.presentation.controller;
 
 import com.fisiunmsm.grupo3.comp.application.service.CompetenciaService;
-import com.fisiunmsm.grupo3.comp.application.service.ReporteService;
 import com.fisiunmsm.grupo3.comp.domain.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -21,8 +16,6 @@ public class CompetenciaController {
 
     @Autowired
     private CompetenciaService competenciaService;
-    @Autowired
-    private ReporteService reporteService;
 
     @PostMapping("/general")
     public Mono<Competencia> nuevaCompetenciaG(@RequestBody CompetenciaRegister competenciaRegister) {
