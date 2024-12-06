@@ -6,6 +6,7 @@ import com.fisiunmsm.grupo3.comp.domain.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.*;
 
@@ -74,11 +75,12 @@ public class CompetenciaController {
     }
 
     @GetMapping("/buscar")
-    public Flux<Competencia> buscarCompetencias(
+    public Flux<CompetenciaResponse> buscarCompetencias(
             @RequestParam(required = false) String tipo,
-            @RequestParam(required = false) Integer departamento,
-            @RequestParam(required = false) Integer institucion) {
-        return competenciaService.buscarCompetencias(tipo, departamento, institucion);
+            @RequestParam(required = false) Integer departamentoId,
+            @RequestParam(required = false) Integer institucionId,
+            @RequestParam(required = false) Integer planId) {
+        return competenciaService.buscarCompetencias(tipo, departamentoId, institucionId, planId);
     }
 
     @PostMapping("/importar-csv")

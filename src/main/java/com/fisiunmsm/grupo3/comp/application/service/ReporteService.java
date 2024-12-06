@@ -21,7 +21,6 @@ import reactor.core.publisher.Mono;
 
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

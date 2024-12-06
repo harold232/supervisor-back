@@ -16,6 +16,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -27,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import org.apache.commons.csv.CSVParser;
 
@@ -165,9 +165,9 @@ public class CompetenciaService {
                 .count();
     }
 
-    public Flux<Competencia> buscarCompetencias(String tipo, Integer departamento, Integer institucion) {
-        return competenciaRepository.buscarCompetencias(tipo, departamento, institucion)
-                .map(CompetenciaTable::toDomainModel);
+    public Flux<CompetenciaResponse> buscarCompetencias(String tipo, Integer departamentoId, Integer institucionId, Integer planId) {
+        return competenciaRepository.buscarCompetencias(tipo, departamentoId, institucionId, planId)
+                .flatMap(this::mapToCompetenciaResponse);
     }
 
     public Mono<Void> importarCompetenciasCsv(MultipartFile file) {
@@ -205,13 +205,13 @@ public class CompetenciaService {
 
                 Sheet sheet = workbook.getSheetAt(0);
                 Flux<CompetenciaTable> competenciaFlux = Flux.fromIterable(sheet)
-                        .skip(1) // Skip header row
+                        .skip(1)
                         .map(this::excelRowToCompetencia)
                         .flatMap(competenciaRepository::save);
 
                 return competenciaFlux.then();
             } catch (IOException e) {
-                return Mono.error(new RuntimeException("Error processing Excel file", e));
+                return Mono.error(new RuntimeException("Error procesando el archivo", e));
             }
         }).then();
     }
@@ -240,6 +240,23 @@ public class CompetenciaService {
     public Flux<PromedioCreditosHorasDTO> obtenerPromedioCreditosYHoras() {
         return competenciaRepository.obtenerPromedioCreditosYHoras();
     }
+/*
+    private void notifyNewCompetencia(Competencia competencia) {
+        CompetenciaResponse response = new CompetenciaResponse(
+                competencia.getId(),
+                competencia.getCodigo(),
+                competencia.getNombre(),
+                competencia.getDescripcion(),
+                competencia.getPlanid(),
+                "Plan",
+                competencia.getInstitucionid(),
+                "Institución",
+                competencia.getDepartamentoid(),
+                "Departamento",
+                competencia.getTipo()
+        );
+        webSocketHandler.notifyNewCompetencia(response);
+    }*/
 /*
     private Mono<CompetenciaResponse> mapToCompetenciaResponse(CompetenciaTable competencia) {
         return departamentoRepository.findById(competencia.getDepartamentoid())

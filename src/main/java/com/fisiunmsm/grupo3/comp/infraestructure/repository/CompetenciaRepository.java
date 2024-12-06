@@ -1,5 +1,6 @@
 package com.fisiunmsm.grupo3.comp.infraestructure.repository;
 
+import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciasPorCursoDTO;
 import com.fisiunmsm.grupo3.comp.domain.model.EstadisticasDTO;
 import com.fisiunmsm.grupo3.comp.domain.model.PromedioCreditosHorasDTO;
@@ -10,10 +11,18 @@ import reactor.core.publisher.Flux;
 
 public interface CompetenciaRepository extends R2dbcRepository<CompetenciaTable, Integer> {
 
-    @Query("SELECT * FROM competencia WHERE (:tipo IS NULL OR tipo = :tipo) " +
-            "AND (:departamento IS NULL OR departamentoid = :departamento) " +
-            "AND (:institucion IS NULL OR institucionid = :institucion)")
-    Flux<CompetenciaTable> buscarCompetencias(String tipo, Integer departamento, Integer institucion);
+    @Query("""
+        SELECT c.*
+        FROM competencia c
+        JOIN departamento d ON c.departamentoid = d.id
+        JOIN institucion i ON c.institucionid = i.id
+        JOIN planestudios p ON c.planid = p.id
+        WHERE (:tipo IS NULL OR c.tipo = :tipo)
+        AND (:departamentoId IS NULL OR d.id = :departamentoId)
+        AND (:institucionId IS NULL OR i.id = :institucionId)
+        AND (:planId IS NULL OR p.id = :planId)
+    """)
+    Flux<CompetenciaTable> buscarCompetencias(String tipo, Integer departamentoId, Integer institucionId, Integer planId);
 
     @Query("SELECT tipo, COUNT(*) AS total FROM competencia GROUP BY tipo")
     Flux<EstadisticasDTO> obtenerEstadisticas();
