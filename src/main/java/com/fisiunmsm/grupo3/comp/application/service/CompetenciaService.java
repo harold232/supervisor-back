@@ -1,8 +1,7 @@
 package com.fisiunmsm.grupo3.comp.application.service;
 
-import com.fisiunmsm.grupo3.comp.domain.model.Competencia;
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaRegister;
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
+import com.fisiunmsm.grupo3.comp.application.error.CompetenciaNoEncontradaException;
+import com.fisiunmsm.grupo3.comp.domain.model.*;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.CompetenciaTable;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.DepartamentoTable;
 import com.fisiunmsm.grupo3.comp.infraestructure.mapper.InstitucionTable;
@@ -11,11 +10,28 @@ import com.fisiunmsm.grupo3.comp.infraestructure.repository.CompetenciaRepositor
 import com.fisiunmsm.grupo3.comp.infraestructure.repository.DepartamentoRepository;
 import com.fisiunmsm.grupo3.comp.infraestructure.repository.InstitucionRepository;
 import com.fisiunmsm.grupo3.comp.infraestructure.repository.PlanEstudiosRepository;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+import org.apache.commons.csv.CSVParser;
 
 @Service
 public class CompetenciaService {
@@ -28,6 +44,8 @@ public class CompetenciaService {
     private PlanEstudiosRepository planEstudiosRepository;
     @Autowired
     private InstitucionRepository institucionRepository;
+    @Autowired
+    private MessageSource mensajes;
 
     public Mono<Competencia> crearCompetenciaGeneral(CompetenciaRegister competenciaRegister) {
         Competencia competencia = new Competencia(
@@ -38,8 +56,7 @@ public class CompetenciaService {
                 competenciaRegister.planid(),
                 competenciaRegister.institucionid(),
                 competenciaRegister.departamentoid(),
-                "G"
-        );
+                "G");
         CompetenciaTable competenciaEntity = CompetenciaTable.fromDomainModel(competencia);
         return competenciaRepository.save(competenciaEntity)
                 .map(CompetenciaTable::toDomainModel);
@@ -54,8 +71,7 @@ public class CompetenciaService {
                 competenciaRegister.planid(),
                 competenciaRegister.institucionid(),
                 competenciaRegister.departamentoid(),
-                "E"
-        );
+                "E");
         CompetenciaTable competenciaEntity = CompetenciaTable.fromDomainModel(competencia);
         return competenciaRepository.save(competenciaEntity).map(CompetenciaTable::toDomainModel);
     }
@@ -85,7 +101,6 @@ public class CompetenciaService {
                 .map(InstitucionTable::getNombreCorto)
                 .defaultIfEmpty("Institución sin asignar");
 
-
         return Mono.zip(departamentoNombre, planNombre, institucionNombre)
                 .map(tuple -> new CompetenciaResponse(
                         competencia.getId(),
@@ -98,8 +113,7 @@ public class CompetenciaService {
                         tuple.getT3(),
                         competencia.getDepartamentoid(),
                         tuple.getT1(),
-                        competencia.getTipo()
-                ));
+                        competencia.getTipo()));
     }
 
     public Mono<Competencia> actualizarCompetencia(Integer id, CompetenciaRegister competenciaRegister) {
@@ -114,60 +128,183 @@ public class CompetenciaService {
                     return competenciaRepository.save(competencia);
                 })
                 .map(CompetenciaTable::toDomainModel)
-                .switchIfEmpty(Mono.error(new RuntimeException("Competencia no encontrada")));
+                .switchIfEmpty(Mono.error(new CompetenciaNoEncontradaException(mensajes, id.toString())));
     }
 
     public Mono<Void> eliminarCompetencia(Integer id) {
         return competenciaRepository.findById(id)
-                .flatMap(competencia -> competenciaRepository.delete(competencia));
-                //.then()
-                //.onErrorResume(e -> Mono.empty());
-    }
-/*
-    private Mono<CompetenciaResponse> mapToCompetenciaResponse(CompetenciaTable competencia) {
-        return departamentoRepository.findById(competencia.getDepartamentoid())
-                .map(departamento -> new CompetenciaResponse(
-                        competencia.getId(),
-                        competencia.getCodigo(),
-                        competencia.getNombre(),
-                        competencia.getDescripcion(),
-                        competencia.getPlanid(),
-                        competencia.getInstitucionid(),
-                        competencia.getDepartamentoid(),
-                        departamento.getNombre(),
-                        competencia.getTipo()
-                ));
-    }*/
-/*
-    public Flux<CompetenciaResponse> obtenerCompetenciasGenerales() {
-        return competenciaRepository.findAll()
-                .filter(competencia -> "G".equals(competencia.getTipo())) // Filter for general competencies
-                .map(CompetenciaTable::toDomainModel)
-                .map(competencia -> new CompetenciaResponse(
-                        competencia.getId(),
-                        competencia.getCodigo(),
-                        competencia.getNombre(),
-                        competencia.getDescripcion(),
-                        competencia.getPlanid(),
-                        competencia.getInstitucionid(),
-                        competencia.getDepartamentoid(),
-                        competencia.getTipo()
-                ));
+                .flatMap(competencia -> competenciaRepository.delete(competencia))
+                .switchIfEmpty(Mono.error(new CompetenciaNoEncontradaException(mensajes, id.toString())));
     }
 
-    public Flux<CompetenciaResponse> obtenerCompetenciasEspecificas() {
+    public Mono<CompetenciaResponse> obtenerCompetenciaPorId(Integer id) {
+        return competenciaRepository.findById(id)
+                .flatMap(this::mapToCompetenciaResponse)
+                .switchIfEmpty(Mono.error(new CompetenciaNoEncontradaException(mensajes, id.toString())));
+    }
+
+    public Flux<CompetenciaResumen> obtenerCompetencias() {
         return competenciaRepository.findAll()
-                .filter(competencia -> "E".equals(competencia.getTipo()))
-                .map(CompetenciaTable::toDomainModel)
-                .map(competencia -> new CompetenciaResponse(
-                        competencia.getId(),
+                .map(competencia -> new CompetenciaResumen(
                         competencia.getCodigo(),
                         competencia.getNombre(),
-                        competencia.getDescripcion(),
-                        competencia.getPlanid(),
-                        competencia.getInstitucionid(),
-                        competencia.getDepartamentoid(),
-                        competencia.getTipo()
-                ));
-    }*/
+                        "G".equals(competencia.getTipo()) ? "General" : "Específica"));
+    }
+
+    public Mono<Long> contarCompetenciasGenerales() {
+        return competenciaRepository.findAll()
+                .filter(competencia -> "G".equals(competencia.getTipo()))
+                .count();
+    }
+
+    public Mono<Long> contarCompetenciasEspecificas() {
+        return competenciaRepository.findAll()
+                .filter(competencia -> "E".equals(competencia.getTipo()))
+                .count();
+    }
+
+    public Flux<CompetenciaResponse> buscarCompetencias(String tipo, Integer departamentoId, Integer institucionId,
+            Integer planId) {
+        return competenciaRepository.buscarCompetencias(tipo, departamentoId, institucionId, planId)
+                .flatMap(this::mapToCompetenciaResponse);
+    }
+
+    public Mono<Void> importarCompetenciasCsv(MultipartFile file) {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+                CSVParser csvParser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader)) {
+
+            return Flux.fromIterable(csvParser.getRecords())
+                    .map(this::csvRecordToCompetencia)
+                    .flatMap(competenciaRepository::save)
+                    .then();
+        } catch (IOException e) {
+            return Mono.error(new RuntimeException("Error processing CSV file", e));
+        }
+    }
+
+    private CompetenciaTable csvRecordToCompetencia(CSVRecord record) {
+        CompetenciaTable competencia = new CompetenciaTable(
+                null,
+                record.get("codigo"),
+                record.get("nombre"),
+                record.get("descripcion"),
+                Integer.parseInt(record.get("planid")),
+                Integer.parseInt(record.get("institucionid")),
+                Integer.parseInt(record.get("departamentoid")),
+                record.get("tipo"));
+        System.out.println("Procesando competencia: " + competencia);
+        return competencia;
+    }
+
+    public Mono<Void> importarCompetenciasExcel(MultipartFile file) {
+        return Mono.fromCallable(() -> {
+            try (InputStream inputStream = file.getInputStream();
+                    Workbook workbook = new XSSFWorkbook(inputStream)) {
+
+                Sheet sheet = workbook.getSheetAt(0);
+                Flux<CompetenciaTable> competenciaFlux = Flux.fromIterable(sheet)
+                        .skip(1)
+                        .map(this::excelRowToCompetencia)
+                        .flatMap(competenciaRepository::save);
+
+                return competenciaFlux.then();
+            } catch (IOException e) {
+                return Mono.error(new RuntimeException("Error procesando el archivo", e));
+            }
+        }).then();
+    }
+
+    private CompetenciaTable excelRowToCompetencia(Row row) {
+        return new CompetenciaTable(
+                null,
+                row.getCell(0).getStringCellValue(),
+                row.getCell(1).getStringCellValue(),
+                row.getCell(2).getStringCellValue(),
+                (int) row.getCell(3).getNumericCellValue(),
+                (int) row.getCell(4).getNumericCellValue(),
+                (int) row.getCell(5).getNumericCellValue(),
+                row.getCell(6).getStringCellValue());
+    }
+
+    public Flux<EstadisticasDTO> obtenerEstadisticas() {
+        return competenciaRepository.obtenerEstadisticas();
+    }
+
+    public Flux<CompetenciasPorCursoDTO> obtenerCompetenciasPorCursoYTipo() {
+        return competenciaRepository.obtenerCompetenciasPorCursoYTipo();
+    }
+
+    public Flux<PromedioCreditosHorasDTO> obtenerPromedioCreditosYHoras() {
+        return competenciaRepository.obtenerPromedioCreditosYHoras();
+    }
+    /*
+     * private void notifyNewCompetencia(Competencia competencia) {
+     * CompetenciaResponse response = new CompetenciaResponse(
+     * competencia.getId(),
+     * competencia.getCodigo(),
+     * competencia.getNombre(),
+     * competencia.getDescripcion(),
+     * competencia.getPlanid(),
+     * "Plan",
+     * competencia.getInstitucionid(),
+     * "Institución",
+     * competencia.getDepartamentoid(),
+     * "Departamento",
+     * competencia.getTipo()
+     * );
+     * webSocketHandler.notifyNewCompetencia(response);
+     * }
+     */
+    /*
+     * private Mono<CompetenciaResponse> mapToCompetenciaResponse(CompetenciaTable
+     * competencia) {
+     * return departamentoRepository.findById(competencia.getDepartamentoid())
+     * .map(departamento -> new CompetenciaResponse(
+     * competencia.getId(),
+     * competencia.getCodigo(),
+     * competencia.getNombre(),
+     * competencia.getDescripcion(),
+     * competencia.getPlanid(),
+     * competencia.getInstitucionid(),
+     * competencia.getDepartamentoid(),
+     * departamento.getNombre(),
+     * competencia.getTipo()
+     * ));
+     * }
+     */
+    /*
+     * public Flux<CompetenciaResponse> obtenerCompetenciasGenerales() {
+     * return competenciaRepository.findAll()
+     * .filter(competencia -> "G".equals(competencia.getTipo())) // Filter for
+     * general competencies
+     * .map(CompetenciaTable::toDomainModel)
+     * .map(competencia -> new CompetenciaResponse(
+     * competencia.getId(),
+     * competencia.getCodigo(),
+     * competencia.getNombre(),
+     * competencia.getDescripcion(),
+     * competencia.getPlanid(),
+     * competencia.getInstitucionid(),
+     * competencia.getDepartamentoid(),
+     * competencia.getTipo()
+     * ));
+     * }
+     * 
+     * public Flux<CompetenciaResponse> obtenerCompetenciasEspecificas() {
+     * return competenciaRepository.findAll()
+     * .filter(competencia -> "E".equals(competencia.getTipo()))
+     * .map(CompetenciaTable::toDomainModel)
+     * .map(competencia -> new CompetenciaResponse(
+     * competencia.getId(),
+     * competencia.getCodigo(),
+     * competencia.getNombre(),
+     * competencia.getDescripcion(),
+     * competencia.getPlanid(),
+     * competencia.getInstitucionid(),
+     * competencia.getDepartamentoid(),
+     * competencia.getTipo()
+     * ));
+     * }
+     */
 }
