@@ -11,7 +11,7 @@ COPY . /app
 RUN chmod +x ./mvnw
 
 # Build the application
-RUN ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install
+RUN ./mvnw -B -DskipTests clean package
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
