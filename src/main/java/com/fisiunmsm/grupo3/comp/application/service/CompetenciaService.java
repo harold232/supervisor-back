@@ -18,7 +18,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -238,73 +237,5 @@ public class CompetenciaService {
     public Flux<PromedioCreditosHorasDTO> obtenerPromedioCreditosYHoras() {
         return competenciaRepository.obtenerPromedioCreditosYHoras();
     }
-    /*
-     * private void notifyNewCompetencia(Competencia competencia) {
-     * CompetenciaResponse response = new CompetenciaResponse(
-     * competencia.getId(),
-     * competencia.getCodigo(),
-     * competencia.getNombre(),
-     * competencia.getDescripcion(),
-     * competencia.getPlanid(),
-     * "Plan",
-     * competencia.getInstitucionid(),
-     * "Institución",
-     * competencia.getDepartamentoid(),
-     * "Departamento",
-     * competencia.getTipo()
-     * );
-     * webSocketHandler.notifyNewCompetencia(response);
-     * }
-     */
-    /*
-     * private Mono<CompetenciaResponse> mapToCompetenciaResponse(CompetenciaTable
-     * competencia) {
-     * return departamentoRepository.findById(competencia.getDepartamentoid())
-     * .map(departamento -> new CompetenciaResponse(
-     * competencia.getId(),
-     * competencia.getCodigo(),
-     * competencia.getNombre(),
-     * competencia.getDescripcion(),
-     * competencia.getPlanid(),
-     * competencia.getInstitucionid(),
-     * competencia.getDepartamentoid(),
-     * departamento.getNombre(),
-     * competencia.getTipo()
-     * ));
-     * }
-     */
-    /*
-     * public Flux<CompetenciaResponse> obtenerCompetenciasGenerales() {
-     * return competenciaRepository.findAll()
-     * .filter(competencia -> "G".equals(competencia.getTipo())) // Filter for
-     * general competencies
-     * .map(CompetenciaTable::toDomainModel)
-     * .map(competencia -> new CompetenciaResponse(
-     * competencia.getId(),
-     * competencia.getCodigo(),
-     * competencia.getNombre(),
-     * competencia.getDescripcion(),
-     * competencia.getPlanid(),
-     * competencia.getInstitucionid(),
-     * competencia.getDepartamentoid(),
-     * competencia.getTipo()
-     * ));
-     * }
-     * 
-     * public Flux<CompetenciaResponse> obtenerCompetenciasEspecificas() {
-     * return competenciaRepository.findAll()
-     * .filter(competencia -> "E".equals(competencia.getTipo()))
-     * .map(CompetenciaTable::toDomainModel)
-     * .map(competencia -> new CompetenciaResponse(
-     * competencia.getId(),
-     * competencia.getCodigo(),
-     * competencia.getNombre(),
-     * competencia.getDescripcion(),
-     * competencia.getPlanid(),
-     * competencia.getInstitucionid(),
-     * competencia.getDepartamentoid(),
-     * competencia.getTipo()
-     * ));
-     * }
-     */
+    
 }

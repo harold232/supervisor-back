@@ -1,6 +1,5 @@
 package com.fisiunmsm.grupo3.comp.infraestructure.repository;
 
-import com.fisiunmsm.grupo3.comp.domain.model.CompetenciaResponse;
 import com.fisiunmsm.grupo3.comp.domain.model.CompetenciasPorCursoDTO;
 import com.fisiunmsm.grupo3.comp.domain.model.EstadisticasDTO;
 import com.fisiunmsm.grupo3.comp.domain.model.PromedioCreditosHorasDTO;

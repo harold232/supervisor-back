@@ -53,10 +53,9 @@ public class ReporteService {
                     document.open();
 
                     // Encabezado del Reporte
-                    document.add(new Paragraph("Reporte de Competencias - [Institución/Departamento/Fecha]"));
+                    document.add(new Paragraph("Reporte de Competencias"));
                     document.add(new Paragraph("Fecha de generación: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
                     document.add(new Paragraph("Usuario: User"));
-                    document.add(new Paragraph("Filtros aplicados: [Filtros]"));
                     document.add(new Paragraph(" ")); // Espacio en blanco
 
                     // Resumen General
@@ -87,7 +86,7 @@ public class ReporteService {
                     document.add(table);
 
                     // Competencias Detalladas
-                    document.add(new Paragraph("Competencias Detalladas"));
+                    document.add(new Paragraph("Competencias"));
                     PdfPTable detailedTable = new PdfPTable(7);
                     detailedTable.setWidthPercentage(100);
                     detailedTable.setSpacingBefore(10f);
@@ -110,11 +109,11 @@ public class ReporteService {
                     document.add(detailedTable);
 
                     document.add(new Paragraph("Análisis Estadístico"));
-                    // Gráfico de distribución de competencias por tipo
+                    
                     Image pieChart = Image.getInstance(createPieChart(totalGenerales, totalEspecificas));
                     document.add(pieChart);
 
-                    // Gráfico de competencias por institución o departamento
+                    
                     Image barChart = Image.getInstance(createBarChart(competenciasGenerales, competenciasEspecificas));
                     document.add(barChart);
 
